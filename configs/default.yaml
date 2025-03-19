@@ -1,0 +1,105 @@
+# 数据配置
+data:
+  data_dir: "data"
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  batch_size: 8
+  num_workers: 4
+  input_size: [256, 256]
+  buffer_size: 100  # 滑坡点缓冲区大小（米）
+
+# 模型配置
+model:
+  name: "LandslideRiskNet"
+  input_channels: 15
+  output_channels: 1
+  encoder: "resnet34"
+  decoder_channels: [256, 128, 64, 32, 16]
+  use_pretrained: true
+  use_attention: false
+
+# 训练配置
+training:
+  num_epochs: 100
+  early_stopping_patience: 10
+  device: "cuda"  # 可选: "cuda" 或 "cpu"
+  checkpoint_dir: "checkpoints"
+  log_dir: "logs"
+  plot_dir: "plots"
+  buffer_size: 100  # 滑坡点缓冲区大小（米）
+  visualization:
+    save_dir: "results/visualizations"
+    plot_frequency: 5  # 每隔多少个epoch绘制一次
+  save:
+    save_dir: "results/models"
+    save_frequency: 5  # 每隔多少个epoch保存一次
+    save_best_only: true  # 是否只保存最佳模型
+  logging:
+    log_dir: "results/logs"
+    log_frequency: 1  # 每隔多少个batch记录一次
+
+# 优化器配置
+optimizer:
+  name: "adamw"
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  momentum: 0.9
+  beta1: 0.9
+  beta2: 0.999
+
+# 学习率调度器配置
+scheduler:
+  name: "ReduceLROnPlateau"
+  mode: "min"
+  factor: 0.5
+  patience: 5
+  verbose: true
+  min_lr: 1e-6
+
+# 损失函数配置
+loss:
+  name: "CombinedLoss"
+  weights:
+    bce: 0.5
+    dice: 0.5
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+  spatial_weight: 0.1
+
+# 评估指标配置
+metrics:
+  threshold: 0.5  # 二值化阈值
+  iou_threshold: 0.5  # IoU阈值
+  save_plots: true
+  plot_dir: "plots"
+
+# 数据增强配置
+augmentation:
+  train:
+    - name: "RandomRotate90"
+      p: 0.5
+    - name: "HorizontalFlip"
+      p: 0.5
+    - name: "VerticalFlip"
+      p: 0.5
+    - name: "RandomBrightnessContrast"
+      p: 0.2
+      brightness_limit: 0.2
+      contrast_limit: 0.2
+    - name: "GaussNoise"
+      p: 0.2
+      var_limit: [10.0, 50.0]
+    - name: "ElasticTransform"
+      p: 0.2
+      alpha: 120
+      sigma: 120 * 0.05
+      alpha_affine: 120 * 0.03
+  val:
+    - name: "Normalize"
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+  test:
+    - name: "Normalize"
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225] 
